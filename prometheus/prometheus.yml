@@ -23,6 +23,6 @@ scrape_configs:
   # DevOps Demo App
   - job_name: 'devops-app'
     static_configs:
-      - targets: ['app:3000']
+      - targets: ['devops-app:3000']
     metrics_path: '/metrics'
     scrape_interval: 5s
