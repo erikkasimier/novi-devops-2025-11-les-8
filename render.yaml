@@ -1,0 +1,36 @@
+# render.yaml - Infrastructure as Code voor Render.com
+# Dit bestand definieert je deployment configuratie als code
+# Render detecteert dit automatisch in je repository
+
+services:
+  # Web Service configuratie
+  - type: web
+    name: novi-devops-2025-11-les-7
+    runtime: docker
+    
+    # OPLOSSING: GitHub repository URL
+    repo: github.com/erikkasimier/novi-devops-2025-11-les-7
+    
+    # Branch om te deployen
+    branch: main
+    
+    # Plan (free, starter, standard, etc.)
+    plan: free
+    
+    # Auto-deploy bij push naar branch
+    autoDeploy: true
+    
+    # Health check configuratie
+    healthCheckPath: /health
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT wordt automatisch door Render gezet
+      
+      # OPLOSSING: DEPLOYED_AT met sync: false
+      # generateValue: true genereert een unieke waarde bij elke deploy
+      - key: DEPLOYED_AT
+        sync: false
+        generateValue: true

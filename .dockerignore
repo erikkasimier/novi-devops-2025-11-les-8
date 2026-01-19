@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (worden in container geïnstalleerd)
+node_modules
+
+# Tests (niet nodig in productie image)
+tests
+coverage
+*.test.js
+
+# IDE
+.idea
+.vscode
+
+# Docs
+*.md
+!README.md
+
+# CI/CD
+.github
+
+# Local env
+.env
+.env.*

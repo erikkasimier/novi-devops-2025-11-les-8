@@ -1,0 +1,33 @@
+# Prometheus Alert Rules
+groups:
+  - name: app_alerts
+    rules:
+      # Alert when application is down
+      - alert: AppDown
+        expr: up{job="devops-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application {{ $labels.instance }} is down"
+          description: "The devops-app has been down for more than 1 minute."
+
+      # Alert on high memory usage
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="devops-app"} > 200000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 200MB for 5 minutes."
+
+      # Alert on no requests (potential issue)
+      - alert: NoTraffic
+        expr: rate(http_requests_total{job="devops-app"}[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No traffic to {{ $labels.instance }}"
+          description: "No requests received in the last 10 minutes."

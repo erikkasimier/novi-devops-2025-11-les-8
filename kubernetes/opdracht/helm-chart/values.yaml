@@ -1,0 +1,53 @@
+# Default values for devops-app
+
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: alpine
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: devops.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilization: 50
+  targetMemoryUtilization: 70
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 5
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 3
+
+config:
+  APP_ENV: production
+  LOG_LEVEL: info
+  API_TIMEOUT: "30"
+
+# Secrets worden apart beheerd
+secrets:
+  create: true

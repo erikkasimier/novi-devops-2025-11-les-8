@@ -1,0 +1,30 @@
+---
+# ClusterIP Service (internal)
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-app-internal
+  namespace: devops-demo
+spec:
+  type: ClusterIP
+  selector:
+    app: devops-app
+  ports:
+  - port: 80
+    targetPort: 80
+
+---
+# NodePort Service (external)
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-app-external
+  namespace: devops-demo
+spec:
+  type: NodePort
+  selector:
+    app: devops-app
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
