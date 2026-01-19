@@ -1,8 +1,42 @@
 const express = require('express');
 const app = express();
+const promClient = require('prom-client');
+
+// Request counter voor metrics
+let requestCount = 0;
+
+// Prometheus metrics setup
+promClient.collectDefaultMetrics();
+
+const httpRequestsTotal = new promClient.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'endpoint', 'status']
+});
+
+const processUptimeSeconds = new promClient.Gauge({
+  name: "process_uptime_seconds",
+  help: "Process uptime in seconds",
+  collect() {
+    this.set(process.uptime());
+  }
+});
 
 // Middleware
 app.use(express.json());
+
+// Middleware to count requests
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    httpRequestsTotal.inc({
+      method: req.method,
+      endpoint: req.path,
+      status: res.statusCode
+    });
+    processUptimeSeconds.set(process.uptime());
+  });
+  next();
+});
 
 // Routes
 app.get('/', (req, res) => {
@@ -12,7 +46,6 @@ app.get('/', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
-
 
 // Health check endpoint (voor Kubernetes probes)
 app.get('/health', (req, res) => {
@@ -24,27 +57,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Metrics endpoint (voor Prometheus)
-app.get('/metrics', (req, res) => {
-  const metrics = `
-# HELP http_requests_total Total number of HTTP requests
-# TYPE http_requests_total counter
-http_requests_total{method="GET",endpoint="/",status="200"} ${requestCount}
-
-# HELP app_info Application information
-# TYPE app_info gauge
-app_info{version="${process.env.APP_VERSION || '1.0.0'}"} 1
-
-# HELP process_uptime_seconds Process uptime in seconds
-# TYPE process_uptime_seconds gauge
-process_uptime_seconds ${process.uptime()}
-`;
-  res.set('Content-Type', 'text/plain');
-  res.send(metrics);
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.send(await promClient.register.metrics());
 });
-
-// Request counter voor metrics
-let requestCount = 0;
 
 app.get('/api/items', (req, res) => {
   const items = require('./data');
@@ -54,22 +71,22 @@ app.get('/api/items', (req, res) => {
 app.get('/api/items/:id', (req, res) => {
   const items = require('./data');
   const item = items.getById(parseInt(req.params.id));
-  
+
   if (!item) {
     return res.status(404).json({ error: 'Item not found' });
   }
-  
+
   res.json(item);
 });
 
 app.post('/api/items', (req, res) => {
   const items = require('./data');
   const { name, description } = req.body;
-  
+
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
   }
-  
+
   const newItem = items.create({ name, description });
   res.status(201).json(newItem);
 });
