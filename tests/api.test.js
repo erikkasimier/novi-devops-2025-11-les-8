@@ -14,7 +14,9 @@ describe('API Endpoints', () => {
       
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('message');
-      expect(res.body.message).toContain('Welcome');
+      expect(res.body.message).toContain('Welcome to the Les 8 API!');
+      expect(res.body).toHaveProperty('version');
+      expect(res.body).toHaveProperty('environment');
     });
   });
 
@@ -25,6 +27,32 @@ describe('API Endpoints', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('healthy');
       expect(res.body).toHaveProperty('timestamp');
+      expect(res.body).toHaveProperty('version');
+      expect(res.body).toHaveProperty('requestNumber');
+    });
+  });
+
+  describe('GET /metrics', () => {
+    test('returns prometheus metrics', async () => {
+      const res = await request(app).get('/metrics');
+      
+      expect(res.statusCode).toBe(200);
+      expect(res.header['content-type']).toContain('text/plain');
+      expect(res.text).toContain('http_requests_total');
+      expect(res.text).toContain('app_info');
+      expect(res.text).toContain('process_uptime_seconds');
+    });
+  });
+
+  describe('GET /api/info', () => {
+    test('returns application info', async () => {
+      const res = await request(app).get('/api/info');
+      
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('app', 'DevOps Demo');
+      expect(res.body).toHaveProperty('version');
+      expect(res.body).toHaveProperty('node_version');
+      expect(res.body).toHaveProperty('platform');
       expect(res.body).toHaveProperty('uptime');
     });
   });
